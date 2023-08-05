@@ -11,9 +11,13 @@ from model import RPN3D
 from config import cfg
 from utils import *
 from utils.kitti_loader import iterate_data, sample_test_data
+from utils.bbox_handler import *
 
 
 if __name__ == '__main__':
+    rospy.init_node('VoxelNet', anonymous=True) # ros
+    node = BOXHandler()
+
     parser = argparse.ArgumentParser(description='testing')
 
     parser.add_argument('-n', '--tag', type=str, nargs='?', default='default',
@@ -74,6 +78,7 @@ if __name__ == '__main__':
                 # A: (N) tag
                 # B: (N, N') (class, x, y, z, h, w, l, rz, score)
                 for tag, result in zip(tags, results):
+                    node.bbox_publisher(result[:, 1:8]) # publish ros topic
                     of_path = os.path.join(args.output_path, 'data', tag + '.txt')
                     with open(of_path, 'w+') as f:
                         labels = box3d_to_label([result[:, 1:8]], [result[:, 0]], [result[:, -1]], coordinate='lidar')[0]
