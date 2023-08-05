@@ -386,6 +386,7 @@ def draw_lidar_box3d_on_image(img, boxes3d, scores, gt_boxes3d=np.array([]),
 
     # draw projections
     for qs in projections:
+        qs = qs.astype(int)
         for k in range(0, 4):
             i, j = k, (k + 1) % 4
             cv2.line(img, (qs[i, 0], qs[i, 1]), (qs[j, 0],
@@ -400,6 +401,7 @@ def draw_lidar_box3d_on_image(img, boxes3d, scores, gt_boxes3d=np.array([]),
                                                  qs[j, 1]), color, thickness, cv2.LINE_AA)
     # draw gt projections
     for qs in gt_projections:
+        qs = qs.astype(int)
         for k in range(0, 4):
             i, j = k, (k + 1) % 4
             cv2.line(img, (qs[i, 0], qs[i, 1]), (qs[j, 0],
