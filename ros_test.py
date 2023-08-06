@@ -10,7 +10,7 @@ import tensorflow as tf
 from model import RPN3D
 from config import cfg
 from utils import *
-from utils.bbox_handler_test import *
+from utils.bbox_handler import *
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='testing')
