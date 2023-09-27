@@ -14,11 +14,8 @@ from config import cfg
 from utils.data_aug import aug_data
 from utils.preprocess import process_pointcloud
 
-from utils.bbox_handler import *
-
 class Processor:
-    # def __init__(self, data_tag, f_rgb, f_lidar, f_label, data_dir, aug, is_testset):
-    def __init__(self, data_tag, f_rgb, f_lidar, f_label, data_dir, aug, is_testset, lidar_points=None):
+    def __init__(self, data_tag, f_rgb, f_lidar, f_label, data_dir, aug, is_testset):
         self.data_tag=data_tag
         self.f_rgb = f_rgb
         self.f_lidar = f_lidar
@@ -26,7 +23,6 @@ class Processor:
         self.data_dir = data_dir
         self.aug = aug
         self.is_testset = is_testset
-        self.lidar_points = lidar_points
     
     def __call__(self,load_index):
         if self.aug:
@@ -34,12 +30,7 @@ class Processor:
         else:
             rgb = cv2.resize(cv2.imread(self.f_rgb[load_index]), (cfg.IMAGE_WIDTH, cfg.IMAGE_HEIGHT))
             #rgb.append( cv2.imread(f_rgb[load_index]) )
-            # raw_lidar = np.fromfile(self.f_lidar[load_index], dtype=np.float32).reshape((-1, 4)) # TODO
-            
-            test = BOXHandler()
-            test.test()
-            raw_lidar = test.lidar_points
-            print("raw_lidar:::::", raw_lidar)
+            raw_lidar = np.fromfile(self.f_lidar[load_index], dtype=np.float32).reshape((-1, 4))
             if not self.is_testset:
                 labels = [line for line in open(self.f_label[load_index], 'r').readlines()]
             else:
@@ -53,8 +44,7 @@ class Processor:
 TRAIN_POOL = multiprocessing.Pool(4)
 VAL_POOL = multiprocessing.Pool(2)
 
-# def iterate_data(data_dir, shuffle=False, aug=False, is_testset=False, batch_size=1, multi_gpu_sum=1): # TODO
-def iterate_data(data_dir, lidar_points=None, shuffle=False, aug=False, is_testset=False, batch_size=1, multi_gpu_sum=1): # TODO node = None
+def iterate_data(data_dir, shuffle=False, aug=False, is_testset=False, batch_size=1, multi_gpu_sum=1):
     f_rgb = glob.glob(os.path.join(data_dir, 'image_2', '*.png'))
     f_lidar = glob.glob(os.path.join(data_dir, 'velodyne', '*.bin'))
     f_label = glob.glob(os.path.join(data_dir, 'label_2', '*.txt'))
@@ -64,8 +54,8 @@ def iterate_data(data_dir, lidar_points=None, shuffle=False, aug=False, is_tests
     
     data_tag = [name.split('/')[-1].split('.')[-2] for name in f_rgb]
 
-    # assert len(data_tag) != 0, "dataset folder is not correct"
-    # assert len(data_tag) == len(f_rgb) == len(f_lidar) , "dataset folder is not correct"
+    assert len(data_tag) != 0, "dataset folder is not correct"
+    assert len(data_tag) == len(f_rgb) == len(f_lidar) , "dataset folder is not correct"
     
     nums = len(f_rgb)
     indices = list(range(nums))
@@ -74,8 +64,7 @@ def iterate_data(data_dir, lidar_points=None, shuffle=False, aug=False, is_tests
 
     num_batches = int(math.floor( nums / float(batch_size) ))
 
-    proc=Processor(data_tag, f_rgb, f_lidar, f_label, data_dir, aug, is_testset, lidar_points)
-    # proc=Processor(data_tag, f_rgb, f_lidar, f_label, data_dir, aug, is_testset)
+    proc=Processor(data_tag, f_rgb, f_lidar, f_label, data_dir, aug, is_testset)
 
     for batch_idx in range(num_batches):
         start_idx = batch_idx * batch_size

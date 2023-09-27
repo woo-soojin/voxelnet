@@ -1,10 +1,14 @@
 import numpy as np
 import math
 import rospy
+import sensor_msgs.point_cloud2
+from sensor_msgs.msg import PointCloud2
 from voxelnet.msg import bbox
 
 class BOXHandler():
     def __init__(self, x=None, y=None, z=None, h=None, w=None, l=None, rz=None):
+        self.lidar_points = None # TODO
+
         self.x = x
         self.y = y
         self.z = z
@@ -27,8 +31,17 @@ class BOXHandler():
         self.rotated_max_y = None
         self.rotated_max_z = None
 
+        # subscriber
+        # self.sub = rospy.Subscriber('/ouster/points', PointCloud2, self.get_lidar, queue_size = 1)
+        self.sub = rospy.Subscriber('/velodyne_points', PointCloud2, self.get_lidar, queue_size = 1)
+        
         # publisher
         self.pub = rospy.Publisher('/detector', bbox, queue_size=10)
+
+    def get_lidar(self, msg):
+        points = sensor_msgs.point_cloud2.read_points(msg, skip_nans=True)
+        points = np.array(list(points))
+        self.lidar_points = points[:,0:4] # x,y,z,intensity
 
     def setParameter(self,bounding_box_info):
         self.x = bounding_box_info[0]
@@ -64,3 +77,7 @@ class BOXHandler():
             box.z_max.append(self.max_z)
 
         self.pub.publish(box)
+
+    def test(self):
+        rospy.init_node('velodyne_subscriber', anonymous=True)
+        rospy.Subscriber('/velodyne_points', PointCloud2, self.get_lidar) 
